@@ -8,231 +8,361 @@
 <style>
 *{box-sizing:border-box}
 
-body{
-margin:0;
-font-family:Arial,sans-serif;
-background:#10251b;
-color:#f7f1df;
+:root{
+  --blue:#071a4a;
+  --blue2:#123b86;
+  --gold:#f5c84c;
+  --gold2:#b88718;
+  --white:#fffdf5;
+  --muted:#d8e3ff;
+  --dark:#071329;
 }
 
-.container{
-max-width:1100px;
-margin:auto;
-padding:35px 20px;
-text-align:center;
+body{
+  margin:0;
+  min-height:100vh;
+  font-family:Arial,Helvetica,sans-serif;
+  background:
+    radial-gradient(circle at 50% 0%,#2458b8 0%,#0b245f 35%,#020a20 100%);
+  color:var(--white);
+  padding:16px;
+}
+
+.stage{
+  width:100%;
+  max-width:900px;
+  margin:auto;
+  padding:24px 16px 22px;
+  border:2px solid var(--gold);
+  border-radius:24px;
+  background:rgba(4,18,52,.82);
+  box-shadow:
+    0 0 20px rgba(245,200,76,.18),
+    0 20px 50px rgba(0,0,0,.45);
 }
 
 .brand{
-font-size:14px;
-letter-spacing:2px;
-opacity:.85;
+  text-align:center;
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:2px;
+  color:var(--gold);
+  margin-bottom:5px;
 }
 
 h1{
-font-family:Georgia,serif;
-font-size:clamp(42px,8vw,76px);
-margin:12px 0 5px;
+  margin:0;
+  text-align:center;
+  font-size:clamp(42px,12vw,82px);
+  line-height:.95;
+  font-weight:1000;
+  letter-spacing:2px;
+  color:var(--white);
+  text-shadow:
+    0 3px 0 #8c6814,
+    0 0 18px rgba(245,200,76,.5);
 }
 
 .subtitle{
-font-size:18px;
-margin-bottom:35px;
+  text-align:center;
+  margin:12px 0 22px;
+  font-size:15px;
+  font-weight:900;
+  letter-spacing:2px;
+  color:var(--muted);
 }
 
-.rewards{
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:20px;
-}
-
-.card{
-background:#f7f1df;
-color:#17271d;
-border-radius:18px;
-padding:25px 18px;
-box-shadow:0 8px 25px rgba(0,0,0,.3);
-}
-
-.letter{
-width:75px;
-height:75px;
-margin:auto;
-border-radius:50%;
-background:#b08b3e;
-color:white;
-display:grid;
-place-items:center;
-font:bold 42px Georgia,serif;
-}
-
-.card h2{
-font-size:19px;
-margin:18px 0 10px;
-}
-
-.card p{
-min-height:55px;
-line-height:1.5;
+.choices{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:18px;
 }
 
 .choice{
-width:100%;
-padding:14px;
-border:0;
-border-radius:10px;
-background:#173b28;
-color:white;
-font-weight:bold;
-font-size:16px;
-cursor:pointer;
+  position:relative;
+  min-height:230px;
+  border:2px solid var(--gold);
+  border-radius:18px;
+  background:linear-gradient(145deg,#fffef8,#e8edf8);
+  color:var(--dark);
+  padding:18px 16px 20px;
+  cursor:pointer;
+  box-shadow:
+    0 9px 0 var(--gold2),
+    0 15px 28px rgba(0,0,0,.42);
+  transition:
+    transform .12s ease,
+    box-shadow .12s ease,
+    filter .15s ease;
+  overflow:hidden;
 }
 
-.choice:disabled{
-opacity:.35;
-cursor:not-allowed;
+.choice:hover{
+  filter:brightness(1.06);
+  transform:translateY(-3px);
 }
 
-.notice{
-margin:25px auto;
-padding:18px;
-border:1px solid #b08b3e;
-border-radius:12px;
-display:grid;
-gap:7px;
+.choice:active,
+.choice.pressed{
+  transform:translateY(7px) scale(.985);
+  box-shadow:
+    0 2px 0 var(--gold2),
+    0 5px 12px rgba(0,0,0,.35);
 }
 
-.unlock{
-max-width:600px;
-margin:30px auto;
+.choice.flash{
+  animation:choiceFlash .45s ease;
 }
 
-.codebox{
-display:flex;
-gap:8px;
-margin-top:15px;
+@keyframes choiceFlash{
+  0%{filter:brightness(1)}
+  35%{
+    filter:brightness(1.45);
+    box-shadow:
+      0 0 8px #fff,
+      0 0 28px var(--gold),
+      0 9px 0 var(--gold2);
+  }
+  100%{filter:brightness(1)}
+}
+
+.letter{
+  width:64px;
+  height:64px;
+  margin:0 auto 12px;
+  border-radius:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(145deg,#173e88,#071d51);
+  color:var(--gold);
+  border:2px solid var(--gold);
+  font-size:42px;
+  font-weight:1000;
+  box-shadow:
+    inset 0 2px 4px rgba(255,255,255,.2),
+    0 6px 0 #030d28,
+    0 10px 18px rgba(0,0,0,.35);
+}
+
+.reward{
+  text-align:center;
+  font-size:clamp(23px,6vw,34px);
+  line-height:1.05;
+  font-weight:1000;
+  color:#071a4a;
+  margin-bottom:10px;
+}
+
+.detail{
+  text-align:center;
+  font-size:17px;
+  line-height:1.25;
+  font-weight:800;
+  color:#24365d;
+}
+
+.code-area{
+  margin-top:28px;
+  padding:18px 14px;
+  border-top:1px solid rgba(245,200,76,.5);
+  text-align:center;
+}
+
+.warning{
+  font-size:clamp(17px,4.5vw,23px);
+  font-weight:1000;
+  letter-spacing:1px;
+  color:var(--gold);
+  margin-bottom:8px;
+  text-shadow:0 0 10px rgba(245,200,76,.25);
+}
+
+.warning-sub{
+  color:var(--muted);
+  font-size:15px;
+  line-height:1.4;
+  font-weight:700;
+  margin-bottom:16px;
+}
+
+.code-row{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  max-width:430px;
+  margin:auto;
 }
 
 input{
-flex:1;
-padding:14px;
-border:0;
-border-radius:10px;
-font-size:16px;
-text-transform:uppercase;
+  width:100%;
+  min-height:54px;
+  border:2px solid var(--gold);
+  border-radius:12px;
+  padding:0 16px;
+  text-align:center;
+  font-size:21px;
+  font-weight:900;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  outline:none;
+}
+
+input:focus{
+  box-shadow:0 0 0 3px rgba(245,200,76,.22);
 }
 
 #unlock{
-padding:14px 20px;
-border:0;
-border-radius:10px;
-background:#b08b3e;
-color:white;
-font-weight:bold;
-cursor:pointer;
+  min-height:56px;
+  border:2px solid #fff1a5;
+  border-radius:12px;
+  background:linear-gradient(145deg,#ffd95e,#c89220);
+  color:#211600;
+  font-size:18px;
+  font-weight:1000;
+  cursor:pointer;
+  box-shadow:
+    0 6px 0 #805b0c,
+    0 10px 18px rgba(0,0,0,.35);
+  transition:.12s ease;
 }
 
-#status{
-margin-top:12px;
-min-height:22px;
+#unlock:active{
+  transform:translateY(5px);
+  box-shadow:
+    0 1px 0 #805b0c,
+    0 4px 8px rgba(0,0,0,.3);
 }
 
-#result{
-margin:25px auto;
-padding:25px;
-max-width:650px;
-background:#f7f1df;
-color:#17271d;
-border-radius:16px;
-font-size:20px;
+#unlock.flash{
+  animation:unlockFlash .4s ease;
 }
 
-.hidden{
-display:none;
+@keyframes unlockFlash{
+  0%{filter:brightness(1)}
+  40%{filter:brightness(1.5)}
+  100%{filter:brightness(1)}
 }
 
-footer{
-margin-top:30px;
-opacity:.7;
+.status{
+  min-height:24px;
+  margin-top:12px;
+  font-size:14px;
+  font-weight:800;
+  color:var(--muted);
 }
 
-@media(max-width:750px){
-.rewards{
-grid-template-columns:1fr;
+.result{
+  margin-top:16px;
+  padding:18px 12px;
+  border-radius:14px;
+  background:rgba(245,200,76,.12);
+  border:1px solid rgba(245,200,76,.55);
+  font-size:18px;
+  font-weight:900;
+  line-height:1.4;
+  display:none;
 }
-.codebox{
-flex-direction:column;
+
+.footer{
+  margin-top:18px;
+  text-align:center;
+  color:var(--muted);
+  font-size:14px;
+  line-height:1.5;
+  font-weight:700;
 }
+
+@media(min-width:700px){
+  body{padding:28px}
+
+  .stage{
+    padding:32px 28px 26px;
+  }
+
+  .choices{
+    grid-template-columns:repeat(3,1fr);
+    gap:16px;
+  }
+
+  .choice{
+    min-height:285px;
+    padding:20px 14px;
+  }
+
+  .code-row{
+    display:grid;
+    grid-template-columns:1fr 170px;
+  }
 }
 </style>
 </head>
 
 <body>
 
-<div class="container">
+<main class="stage">
 
-<div class="brand">ARAUCARIA SEEDLINGS TAGAYTAY</div>
+  <div class="brand">ARAUCARIA SEEDLINGS TAGAYTAY</div>
 
-<h1>SEASON SALE</h1>
+  <h1>SEASON SALE</h1>
 
-<div class="subtitle">
-Choose your reward wisely.
-</div>
+  <div class="subtitle">CHOOSE YOUR REWARD WISELY</div>
 
-<div class="rewards">
+  <section class="choices">
 
-<div class="card">
-<div class="letter">A</div>
-<h2>50 FREE SEEDLINGS</h2>
-<p>+ 20% Shipping Fee Discount</p>
-<button class="choice" data-choice="A" disabled>CHOOSE A</button>
-</div>
+    <button class="choice" data-choice="A" type="button">
+      <div class="letter">A</div>
+      <div class="reward">50 FREE<br>SEEDLINGS</div>
+      <div class="detail">+ 20% Shipping Fee Discount</div>
+    </button>
 
-<div class="card">
-<div class="letter">B</div>
-<h2>30 FREE SEEDLINGS</h2>
-<p>+ 1 Araucaria Plant<br>1.5–2 ft</p>
-<button class="choice" data-choice="B" disabled>CHOOSE B</button>
-</div>
+    <button class="choice" data-choice="B" type="button">
+      <div class="letter">B</div>
+      <div class="reward">30 FREE<br>SEEDLINGS</div>
+      <div class="detail">+ 1 Araucaria Plant<br>1.5–2 ft</div>
+    </button>
 
-<div class="card">
-<div class="letter">C</div>
-<h2>10 FREE SEEDLINGS</h2>
-<p>+ 10% OFF Total Price</p>
-<button class="choice" data-choice="C" disabled>CHOOSE C</button>
-</div>
+    <button class="choice" data-choice="C" type="button">
+      <div class="letter">C</div>
+      <div class="reward">10 FREE<br>SEEDLINGS</div>
+      <div class="detail">+ 10% OFF Total Price</div>
+    </button>
 
-</div>
+  </section>
 
-<div class="notice">
-<strong>One Click. One Choice. One Reward.</strong>
-<span>Take your pick wisely — your choice is final and cannot be changed.</span>
-</div>
+  <section class="code-area">
 
-<div class="unlock">
+    <div class="warning">ONE CLICK. ONE CHOICE. ONE REWARD.</div>
 
-<h2>🔒 Unlock Your Choice</h2>
+    <div class="warning-sub">
+      Take your pick wisely — your choice is final and cannot be changed.
+    </div>
 
-<p>Enter your one-time promo access code.</p>
+    <div class="code-row">
+      <input
+        id="code"
+        maxlength="6"
+        placeholder="ENTER PROMO CODE"
+        autocomplete="off"
+        spellcheck="false"
+      >
 
-<div class="codebox">
-<input id="code" placeholder="Example: AST265">
-<button id="unlock">UNLOCK</button>
-</div>
+      <button id="unlock" type="button">UNLOCK REWARDS</button>
+    </div>
 
-<div id="status"></div>
+    <div id="status" class="status"></div>
 
-</div>
+    <div id="result" class="result"></div>
 
-<div id="result" class="hidden"></div>
+  </section>
 
-<footer>
-Minimum order: 1,000 seedlings
-</footer>
+  <div class="footer">
+    Minimum order: 1,000 seedlings • Your choice is final and cannot be changed.
+  </div>
 
-</div>
+</main>
 
 <script>
-
 const API_URL =
 "https://script.google.com/macros/s/AKfycbwZnQ7p0pvTkqADf4PHVSpX2olZiAFzLfOMiuh9FGLtfGOI8wdxxUh7cJz1IFlcpCY/exec";
 
@@ -244,155 +374,216 @@ const status = document.getElementById("status");
 const result = document.getElementById("result");
 const buttons = document.querySelectorAll(".choice");
 
+function playSound(type){
+  try{
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if(!AudioCtx) return;
+
+    const ctx = new AudioCtx();
+    const gain = ctx.createGain();
+
+    gain.connect(ctx.destination);
+    gain.gain.setValueAtTime(0.0001,ctx.currentTime);
+
+    const osc = ctx.createOscillator();
+    osc.connect(gain);
+
+    if(type === "unlock"){
+      osc.frequency.setValueAtTime(520,ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(
+        760,ctx.currentTime + .16
+      );
+    }else{
+      osc.frequency.setValueAtTime(420,ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(
+        900,ctx.currentTime + .22
+      );
+    }
+
+    osc.type="triangle";
+
+    gain.gain.exponentialRampToValueAtTime(
+      .18,ctx.currentTime + .02
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+      .0001,ctx.currentTime + .28
+    );
+
+    osc.start();
+    osc.stop(ctx.currentTime + .3);
+
+    setTimeout(()=>ctx.close(),400);
+
+  }catch(e){}
+}
+
 function callAPI(params, callback){
+  const callbackName =
+    "promoCallback_" + Date.now() + "_" +
+    Math.floor(Math.random()*1000);
 
-const callbackName =
-"promoCallback_" + Date.now();
+  window[callbackName] = function(data){
+    delete window[callbackName];
 
-window[callbackName] = function(data){
+    if(script.parentNode){
+      script.parentNode.removeChild(script);
+    }
 
-delete window[callbackName];
+    callback(data);
+  };
 
-if(script.parentNode){
-script.parentNode.removeChild(script);
+  const script = document.createElement("script");
+
+  const query = new URLSearchParams(params);
+  query.set("callback",callbackName);
+
+  script.src = API_URL + "?" + query.toString();
+
+  script.onerror = function(){
+    delete window[callbackName];
+
+    if(script.parentNode){
+      script.parentNode.removeChild(script);
+    }
+
+    callback({error:true});
+  };
+
+  document.body.appendChild(script);
 }
 
-callback(data);
-};
+unlock.addEventListener("click",function(){
 
-const script = document.createElement("script");
+  const code = input.value.trim().toUpperCase();
 
-const query = new URLSearchParams(params);
+  if(!/^AST\d{3}$/.test(code)){
+    status.textContent="Please enter a valid promo access code.";
+    return;
+  }
 
-query.set("callback", callbackName);
+  playSound("unlock");
 
-script.src = API_URL + "?" + query.toString();
+  unlock.classList.remove("flash");
+  void unlock.offsetWidth;
+  unlock.classList.add("flash");
 
-script.onerror = function(){
+  status.textContent="Checking promo code...";
+  result.style.display="none";
 
-delete window[callbackName];
+  callAPI({
+    action:"check",
+    code:code
+  },function(data){
 
-if(script.parentNode){
-script.parentNode.removeChild(script);
-}
+    if(data && data.valid){
 
-callback({error:true});
-};
+      activeCode = code;
 
-document.body.appendChild(script);
-}
+      status.textContent =
+        "Unlocked! Choose A, B, or C.";
 
-unlock.addEventListener("click", function(){
+    }else if(data && data.error){
 
-const code = input.value.trim().toUpperCase();
+      status.textContent =
+        "Connection error. Please try again.";
 
-if(!code){
-status.textContent = "Please enter your promo access code.";
-return;
-}
+    }else{
 
-status.textContent = "Checking promo code...";
-unlock.disabled = true;
+      status.textContent =
+        "Invalid or already used promo access code.";
 
-callAPI(
-{action:"check", code:code},
-function(data){
+    }
 
-if(data.error){
-status.textContent = "Connection error. Please try again.";
-unlock.disabled = false;
-return;
-}
-
-if(!data.valid){
-status.textContent = "Invalid or already used promo access code.";
-unlock.disabled = false;
-return;
-}
-
-activeCode = code;
-
-buttons.forEach(function(button){
-button.disabled = false;
+  });
 });
 
-input.disabled = true;
-unlock.disabled = true;
+buttons.forEach(button=>{
 
-status.textContent =
-"Unlocked! Now choose A, B or C.";
+  button.addEventListener("click",function(){
 
-}
-);
+    if(!activeCode){
+      status.textContent =
+        "Enter and unlock your promo code first.";
+      return;
+    }
+
+    const choice = button.dataset.choice;
+
+    playSound("choice");
+
+    button.classList.remove("flash","pressed");
+    void button.offsetWidth;
+    button.classList.add("flash","pressed");
+
+    buttons.forEach(b=>b.disabled=true);
+    unlock.disabled=true;
+    input.disabled=true;
+
+    status.textContent="Processing your reward...";
+
+    callAPI({
+      action:"use",
+      code:activeCode,
+      choice:choice
+    },function(data){
+
+      if(data && data.success){
+
+        let reward="";
+
+        if(choice==="A"){
+          reward =
+            "You chose A — 50 FREE seedlings + 20% Shipping Fee Discount.";
+        }
+
+        if(choice==="B"){
+          reward =
+            "You chose B — 30 FREE seedlings + 1 Araucaria Plant (1.5–2 ft).";
+        }
+
+        if(choice==="C"){
+          reward =
+            "You chose C — 10 FREE seedlings + 10% OFF Total Price.";
+        }
+
+        result.textContent =
+          "🎉 REWARD CONFIRMED! " + reward;
+
+        result.style.display="block";
+
+        status.textContent =
+          "Your choice has been locked. Please message us to place your order.";
+
+        activeCode=null;
+
+      }else if(data && data.error){
+
+        status.textContent =
+          "Connection error. Please contact us before trying another code.";
+
+        buttons.forEach(b=>b.disabled=false);
+        unlock.disabled=false;
+        input.disabled=false;
+
+      }else{
+
+        status.textContent =
+          "Sorry, this promo code is no longer available.";
+
+        buttons.forEach(b=>b.disabled=true);
+
+      }
+
+    });
+
+  });
 
 });
 
-buttons.forEach(function(button){
-
-button.addEventListener("click", function(){
-
-if(!activeCode)return;
-
-const choice = this.dataset.choice;
-
-buttons.forEach(function(b){
-b.disabled = true;
+input.addEventListener("input",function(){
+  this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,"");
 });
-
-status.textContent = "Confirming your reward...";
-
-callAPI(
-{
-action:"use",
-code:activeCode,
-choice:choice
-},
-function(data){
-
-if(data.error){
-buttons.forEach(function(b){
-b.disabled = false;
-});
-
-status.textContent =
-"Connection error. Please try again.";
-
-return;
-}
-
-if(!data.success){
-
-status.textContent =
-"Sorry, this promo code is no longer available.";
-
-return;
-}
-
-const rewards={
-A:"50 FREE seedlings + 20% Shipping Fee Discount",
-B:"30 FREE seedlings + 1 Araucaria Plant (1.5–2 ft)",
-C:"10 FREE seedlings + 10% OFF Total Price"
-};
-
-result.classList.remove("hidden");
-
-result.innerHTML =
-"<strong>Reward " + choice + " Confirmed!</strong><br><br>" +
-rewards[choice] +
-"<br><br><small>One Click. One Choice. One Reward.</small>";
-
-status.textContent =
-"Your choice is final. This promo code is now used.";
-
-activeCode = null;
-
-}
-);
-
-});
-
-});
-
 </script>
 
 </body>

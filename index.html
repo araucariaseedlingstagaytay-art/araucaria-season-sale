@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Araucaria Season Sale</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+margin:0;
+font-family:Arial,sans-serif;
+background:#10251b;
+color:#f7f1df;
+}
+
+.container{
+max-width:1100px;
+margin:auto;
+padding:35px 20px;
+text-align:center;
+}
+
+.brand{
+font-size:14px;
+letter-spacing:2px;
+opacity:.85;
+}
+
+h1{
+font-family:Georgia,serif;
+font-size:clamp(42px,8vw,76px);
+margin:12px 0 5px;
+}
+
+.subtitle{
+font-size:18px;
+margin-bottom:35px;
+}
+
+.rewards{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:20px;
+}
+
+.card{
+background:#f7f1df;
+color:#17271d;
+border-radius:18px;
+padding:25px 18px;
+box-shadow:0 8px 25px rgba(0,0,0,.3);
+}
+
+.letter{
+width:75px;
+height:75px;
+margin:auto;
+border-radius:50%;
+background:#b08b3e;
+color:white;
+display:grid;
+place-items:center;
+font:bold 42px Georgia,serif;
+}
+
+.card h2{
+font-size:19px;
+margin:18px 0 10px;
+}
+
+.card p{
+min-height:55px;
+line-height:1.5;
+}
+
+.choice{
+width:100%;
+padding:14px;
+border:0;
+border-radius:10px;
+background:#173b28;
+color:white;
+font-weight:bold;
+font-size:16px;
+cursor:pointer;
+}
+
+.choice:disabled{
+opacity:.35;
+cursor:not-allowed;
+}
+
+.notice{
+margin:25px auto;
+padding:18px;
+border:1px solid #b08b3e;
+border-radius:12px;
+display:grid;
+gap:7px;
+}
+
+.unlock{
+max-width:600px;
+margin:30px auto;
+}
+
+.codebox{
+display:flex;
+gap:8px;
+margin-top:15px;
+}
+
+input{
+flex:1;
+padding:14px;
+border:0;
+border-radius:10px;
+font-size:16px;
+text-transform:uppercase;
+}
+
+#unlock{
+padding:14px 20px;
+border:0;
+border-radius:10px;
+background:#b08b3e;
+color:white;
+font-weight:bold;
+cursor:pointer;
+}
+
+#status{
+margin-top:12px;
+min-height:22px;
+}
+
+#result{
+margin:25px auto;
+padding:25px;
+max-width:650px;
+background:#f7f1df;
+color:#17271d;
+border-radius:16px;
+font-size:20px;
+}
+
+.hidden{
+display:none;
+}
+
+footer{
+margin-top:30px;
+opacity:.7;
+}
+
+@media(max-width:750px){
+.rewards{
+grid-template-columns:1fr;
+}
+.codebox{
+flex-direction:column;
+}
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="brand">ARAUCARIA SEEDLINGS TAGAYTAY</div>
+
+<h1>SEASON SALE</h1>
+
+<div class="subtitle">
+Choose your reward wisely.
+</div>
+
+<div class="rewards">
+
+<div class="card">
+<div class="letter">A</div>
+<h2>50 FREE SEEDLINGS</h2>
+<p>+ 20% Shipping Fee Discount</p>
+<button class="choice" data-choice="A" disabled>CHOOSE A</button>
+</div>
+
+<div class="card">
+<div class="letter">B</div>
+<h2>30 FREE SEEDLINGS</h2>
+<p>+ 1 Araucaria Plant<br>1.5–2 ft</p>
+<button class="choice" data-choice="B" disabled>CHOOSE B</button>
+</div>
+
+<div class="card">
+<div class="letter">C</div>
+<h2>10 FREE SEEDLINGS</h2>
+<p>+ 10% OFF Total Price</p>
+<button class="choice" data-choice="C" disabled>CHOOSE C</button>
+</div>
+
+</div>
+
+<div class="notice">
+<strong>One Click. One Choice. One Reward.</strong>
+<span>Take your pick wisely — your choice is final and cannot be changed.</span>
+</div>
+
+<div class="unlock">
+
+<h2>🔒 Unlock Your Choice</h2>
+
+<p>Enter your one-time promo access code.</p>
+
+<div class="codebox">
+<input id="code" placeholder="Example: AST-001">
+<button id="unlock">UNLOCK</button>
+</div>
+
+<div id="status"></div>
+
+</div>
+
+<div id="result" class="hidden"></div>
+
+<footer>
+Minimum order: 1,000 seedlings
+</footer>
+
+</div>
+
+<script>
+
+const promoCodes={
+"AST-001":false,
+"AST-002":false,
+"AST-003":false,
+"AST-TEST":false
+};
+
+let activeCode=null;
+
+const input=document.getElementById("code");
+const unlock=document.getElementById("unlock");
+const status=document.getElementById("status");
+const result=document.getElementById("result");
+const buttons=document.querySelectorAll(".choice");
+
+unlock.addEventListener("click",function(){
+
+const code=input.value.trim().toUpperCase();
+
+if(!promoCodes.hasOwnProperty(code)){
+status.textContent="Invalid promo access code.";
+return;
+}
+
+if(promoCodes[code]){
+status.textContent="This promo code has already been used.";
+return;
+}
+
+activeCode=code;
+
+buttons.forEach(button=>{
+button.disabled=false;
+});
+
+input.disabled=true;
+unlock.disabled=true;
+
+status.textContent="Unlocked! Now choose A, B or C.";
+
+});
+
+buttons.forEach(button=>{
+
+button.addEventListener("click",function(){
+
+if(!activeCode)return;
+
+const choice=this.dataset.choice;
+
+promoCodes[activeCode]=true;
+
+buttons.forEach(b=>{
+b.disabled=true;
+});
+
+const rewards={
+A:"50 FREE seedlings + 20% Shipping Fee Discount",
+B:"30 FREE seedlings + 1 Araucaria Plant (1.5–2 ft)",
+C:"10 FREE seedlings + 10% OFF Total Price"
+};
+
+result.classList.remove("hidden");
+
+result.innerHTML=
+"<strong>Reward "+choice+" Confirmed!</strong><br><br>"+
+rewards[choice]+
+"<br><br><small>One Click. One Choice. One Reward.</small>";
+
+status.textContent=
+"Your choice is final. This promo code is now used.";
+
+});
+
+});
+
+</script>
+
+</body>
+</html>

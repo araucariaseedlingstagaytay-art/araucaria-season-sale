@@ -215,7 +215,7 @@ Choose your reward wisely.
 <p>Enter your one-time promo access code.</p>
 
 <div class="codebox">
-<input id="code" placeholder="Example: AST-001">
+<input id="code" placeholder="Example: AST265">
 <button id="unlock">UNLOCK</button>
 </div>
 
@@ -233,61 +233,140 @@ Minimum order: 1,000 seedlings
 
 <script>
 
-const promoCodes={
-"AST-001":false,
-"AST-002":false,
-"AST-003":false,
-"AST-TEST":false
+const API_URL =
+"https://script.google.com/macros/s/AKfycbwZnQ7p0pvTkqADf4PHVSpX2olZiAFzLfOMiuh9FGLtfGOI8wdxxUh7cJz1IFlcpCY/exec";
+
+let activeCode = null;
+
+const input = document.getElementById("code");
+const unlock = document.getElementById("unlock");
+const status = document.getElementById("status");
+const result = document.getElementById("result");
+const buttons = document.querySelectorAll(".choice");
+
+function callAPI(params, callback){
+
+const callbackName =
+"promoCallback_" + Date.now();
+
+window[callbackName] = function(data){
+
+delete window[callbackName];
+
+if(script.parentNode){
+script.parentNode.removeChild(script);
+}
+
+callback(data);
 };
 
-let activeCode=null;
+const script = document.createElement("script");
 
-const input=document.getElementById("code");
-const unlock=document.getElementById("unlock");
-const status=document.getElementById("status");
-const result=document.getElementById("result");
-const buttons=document.querySelectorAll(".choice");
+const query = new URLSearchParams(params);
 
-unlock.addEventListener("click",function(){
+query.set("callback", callbackName);
 
-const code=input.value.trim().toUpperCase();
+script.src = API_URL + "?" + query.toString();
 
-if(!promoCodes.hasOwnProperty(code)){
-status.textContent="Invalid promo access code.";
+script.onerror = function(){
+
+delete window[callbackName];
+
+if(script.parentNode){
+script.parentNode.removeChild(script);
+}
+
+callback({error:true});
+};
+
+document.body.appendChild(script);
+}
+
+unlock.addEventListener("click", function(){
+
+const code = input.value.trim().toUpperCase();
+
+if(!code){
+status.textContent = "Please enter your promo access code.";
 return;
 }
 
-if(promoCodes[code]){
-status.textContent="This promo code has already been used.";
+status.textContent = "Checking promo code...";
+unlock.disabled = true;
+
+callAPI(
+{action:"check", code:code},
+function(data){
+
+if(data.error){
+status.textContent = "Connection error. Please try again.";
+unlock.disabled = false;
 return;
 }
 
-activeCode=code;
+if(!data.valid){
+status.textContent = "Invalid or already used promo access code.";
+unlock.disabled = false;
+return;
+}
 
-buttons.forEach(button=>{
-button.disabled=false;
+activeCode = code;
+
+buttons.forEach(function(button){
+button.disabled = false;
 });
 
-input.disabled=true;
-unlock.disabled=true;
+input.disabled = true;
+unlock.disabled = true;
 
-status.textContent="Unlocked! Now choose A, B or C.";
+status.textContent =
+"Unlocked! Now choose A, B or C.";
+
+}
+);
 
 });
 
-buttons.forEach(button=>{
+buttons.forEach(function(button){
 
-button.addEventListener("click",function(){
+button.addEventListener("click", function(){
 
 if(!activeCode)return;
 
-const choice=this.dataset.choice;
+const choice = this.dataset.choice;
 
-promoCodes[activeCode]=true;
-
-buttons.forEach(b=>{
-b.disabled=true;
+buttons.forEach(function(b){
+b.disabled = true;
 });
+
+status.textContent = "Confirming your reward...";
+
+callAPI(
+{
+action:"use",
+code:activeCode,
+choice:choice
+},
+function(data){
+
+if(data.error){
+buttons.forEach(function(b){
+b.disabled = false;
+});
+
+status.textContent =
+"Connection error. Please try again.";
+
+return;
+}
+
+if(!data.success){
+
+status.textContent =
+"Sorry, this promo code is no longer available.";
+
+return;
+}
 
 const rewards={
 A:"50 FREE seedlings + 20% Shipping Fee Discount",
@@ -297,13 +376,18 @@ C:"10 FREE seedlings + 10% OFF Total Price"
 
 result.classList.remove("hidden");
 
-result.innerHTML=
-"<strong>Reward "+choice+" Confirmed!</strong><br><br>"+
-rewards[choice]+
+result.innerHTML =
+"<strong>Reward " + choice + " Confirmed!</strong><br><br>" +
+rewards[choice] +
 "<br><br><small>One Click. One Choice. One Reward.</small>";
 
-status.textContent=
+status.textContent =
 "Your choice is final. This promo code is now used.";
+
+activeCode = null;
+
+}
+);
 
 });
 

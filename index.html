@@ -372,6 +372,8 @@ const API_URL =
 "https://script.google.com/macros/s/AKfycbwZnQ7p0pvTkqADf4PHVSpX2olZiAFzLfOMiuh9FGLtfGOI8wdxxUh7cJz1IFlcpCY/exec";
 
 let activeCode = null;
+let pendingChoice = null;
+let pendingRequestId = null;
 
 const input = document.getElementById("code");
 const unlock = document.getElementById("unlock");
@@ -446,17 +448,12 @@ function playSound(type){
     );
 
     osc.start();
-
-    osc.stop(
-      ctx.currentTime + 0.3
-    );
+    osc.stop(ctx.currentTime + 0.3);
 
     setTimeout(function(){
-
       try{
         ctx.close();
       }catch(e){}
-
     },400);
 
   }catch(e){}
@@ -465,82 +462,169 @@ function playSound(type){
 
 
 /* =========================
-   GOOGLE APPS SCRIPT
-   JSONP CONNECTION
+   CREATE UNIQUE REQUEST ID
 ========================= */
 
-function callAPI(params, callback){
+function createRequestId(){
 
-  const callbackName =
-    "promoCallback_" +
-    Date.now() +
+  return (
+    Date.now().toString(36) +
     "_" +
-    Math.floor(Math.random() * 100000);
+    Math.random()
+      .toString(36)
+      .substring(2,10)
+  );
 
-  let finished = false;
+}
 
-  const script =
-    document.createElement("script");
 
-  function finish(data){
+/* =========================
+   GOOGLE APPS SCRIPT
+   JSONP WITH RETRIES
+========================= */
 
-    if(finished) return;
+function callAPI(params, callback, retries = 3){
 
-    finished = true;
+  let attempt = 0;
 
-    clearTimeout(timeout);
+  function attemptCall(){
 
-    try{
-      delete window[callbackName];
-    }catch(e){}
+    attempt++;
 
-    if(script.parentNode){
-      script.parentNode.removeChild(script);
+    const callbackName =
+      "promoCallback_" +
+      Date.now() +
+      "_" +
+      Math.floor(Math.random() * 1000000);
+
+    let finished = false;
+    let timeout = null;
+
+    const script =
+      document.createElement("script");
+
+    function cleanup(){
+
+      if(timeout){
+        clearTimeout(timeout);
+      }
+
+      try{
+        delete window[callbackName];
+      }catch(e){}
+
+      if(script.parentNode){
+        script.parentNode.removeChild(script);
+      }
+
     }
 
-    callback(data);
+    function finish(data){
+
+      if(finished) return;
+
+      finished = true;
+
+      cleanup();
+
+      callback(data);
+
+    }
+
+    window[callbackName] = function(data){
+      finish(data);
+    };
+
+    const query =
+      new URLSearchParams(params);
+
+    query.set(
+      "callback",
+      callbackName
+    );
+
+    /* Prevent browser/proxy caching */
+
+    query.set(
+      "_",
+      Date.now().toString() +
+      Math.floor(Math.random() * 10000)
+    );
+
+    script.src =
+      API_URL +
+      "?" +
+      query.toString();
+
+    script.async = true;
+
+    script.onerror = function(){
+
+      if(attempt < retries){
+
+        cleanup();
+
+        setTimeout(
+          attemptCall,
+          1000 * attempt
+        );
+
+      }else{
+
+        finish({
+          error:true
+        });
+
+      }
+
+    };
+
+    document.body.appendChild(script);
+
+    timeout =
+      setTimeout(function(){
+
+        if(finished) return;
+
+        if(attempt < retries){
+
+          cleanup();
+
+          setTimeout(
+            attemptCall,
+            1000 * attempt
+          );
+
+        }else{
+
+          finish({
+            error:true
+          });
+
+        }
+
+      },10000);
 
   }
 
-  window[callbackName] = function(data){
-    finish(data);
-  };
-
-  const query =
-    new URLSearchParams(params);
-
-  query.set(
-    "callback",
-    callbackName
-  );
-
-  script.src =
-    API_URL +
-    "?" +
-    query.toString();
-
-  script.async = true;
-
-  script.onerror = function(){
-
-    finish({
-      error:true
-    });
-
-  };
-
-  document.body.appendChild(script);
-
-  const timeout =
-    setTimeout(function(){
-
-      finish({
-        error:true
-      });
-
-    },12000);
+  attemptCall();
 
 }
+
+
+/* =========================
+   SILENT CONNECTION WARM-UP
+========================= */
+
+callAPI(
+  {
+    action:"ping"
+  },
+  function(){
+    /* Silent warm-up only */
+  },
+  3
+);
 
 
 /* =========================
@@ -578,6 +662,14 @@ unlock.addEventListener(
 
     result.style.display = "none";
 
+    activeCode = null;
+    pendingChoice = null;
+    pendingRequestId = null;
+
+    buttons.forEach(function(b){
+      b.disabled = false;
+    });
+
     callAPI(
       {
         action:"check",
@@ -604,7 +696,8 @@ unlock.addEventListener(
 
         }
 
-      }
+      },
+      3
     );
 
   }
@@ -634,6 +727,32 @@ buttons.forEach(
         const choice =
           button.dataset.choice;
 
+
+        /* Prevent changing choice
+           during a connection retry */
+
+        if(
+          pendingChoice &&
+          pendingChoice !== choice
+        ){
+
+          status.textContent =
+            "Please retry your original choice.";
+
+          return;
+
+        }
+
+
+        if(!pendingChoice){
+
+          pendingChoice = choice;
+
+          pendingRequestId =
+            createRequestId();
+
+        }
+
         playSound("choice");
 
         button.classList.remove(
@@ -650,7 +769,10 @@ buttons.forEach(
 
         buttons.forEach(
           function(b){
-            b.disabled = true;
+
+            b.disabled =
+              b !== button;
+
           }
         );
 
@@ -660,11 +782,13 @@ buttons.forEach(
         status.textContent =
           "Processing your reward...";
 
+
         callAPI(
           {
             action:"use",
             code:activeCode,
-            choice:choice
+            choice:pendingChoice,
+            requestId:pendingRequestId
           },
           function(data){
 
@@ -672,21 +796,21 @@ buttons.forEach(
 
               let reward = "";
 
-              if(choice === "A"){
+              if(pendingChoice === "A"){
 
                 reward =
                   "You chose A — 50 FREE seedlings + 20% Shipping Fee Discount.";
 
               }
 
-              if(choice === "B"){
+              if(pendingChoice === "B"){
 
                 reward =
                   "You chose B — 30 FREE seedlings + 1 Araucaria Plant (1.5–2 ft).";
 
               }
 
-              if(choice === "C"){
+              if(pendingChoice === "C"){
 
                 reward =
                   "You chose C — 10 FREE seedlings + 10% OFF Total Price.";
@@ -704,22 +828,32 @@ buttons.forEach(
                 "Your choice has been locked. Please message us to place your order.";
 
               activeCode = null;
+              pendingChoice = null;
+              pendingRequestId = null;
 
             }
 
             else if(data && data.error){
 
+              /*
+               * The SAME request ID remains active.
+               * Customer can press the SAME choice again.
+               */
+
               status.textContent =
-                "Connection error. Please contact us before trying another code.";
+                "Connection issue. Please press the SAME choice again.";
 
               buttons.forEach(
                 function(b){
-                  b.disabled = false;
+
+                  b.disabled =
+                    b.dataset.choice !== pendingChoice;
+
                 }
               );
 
-              unlock.disabled = false;
-              input.disabled = false;
+              unlock.disabled = true;
+              input.disabled = true;
 
             }
 
@@ -736,7 +870,8 @@ buttons.forEach(
 
             }
 
-          }
+          },
+          3
         );
 
       }

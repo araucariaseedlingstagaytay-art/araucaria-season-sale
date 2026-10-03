@@ -383,7 +383,7 @@ const buttons = document.querySelectorAll(".choice");
 
 
 /* =========================
-   GAME SHOW SOUND
+   SOUND
 ========================= */
 
 function playSound(type){
@@ -397,11 +397,10 @@ function playSound(type){
     if(!AudioCtx) return;
 
     const ctx = new AudioCtx();
-
     const gain = ctx.createGain();
-    gain.connect(ctx.destination);
-
     const osc = ctx.createOscillator();
+
+    gain.connect(ctx.destination);
     osc.connect(gain);
 
     if(type === "unlock"){
@@ -451,9 +450,7 @@ function playSound(type){
     osc.stop(ctx.currentTime + 0.3);
 
     setTimeout(function(){
-      try{
-        ctx.close();
-      }catch(e){}
+      try{ctx.close();}catch(e){}
     },400);
 
   }catch(e){}
@@ -462,64 +459,68 @@ function playSound(type){
 
 
 /* =========================
-   CREATE UNIQUE REQUEST ID
+   REQUEST ID
 ========================= */
 
 function createRequestId(){
 
-  return (
-    Date.now().toString(36) +
+  return Date.now().toString(36) +
     "_" +
-    Math.random()
-      .toString(36)
-      .substring(2,10)
-  );
+    Math.random().toString(36).substring(2,10);
 
 }
 
 
 /* =========================
-   GOOGLE APPS SCRIPT
-   JSONP WITH RETRIES
+   SIMPLE JSONP
 ========================= */
 
-function callAPI(params, callback, retries = 3){
+function callAPI(params, callback){
 
-  let attempt = 0;
+  const callbackName =
+    "promoCallback_" +
+    Date.now() +
+    "_" +
+    Math.floor(Math.random() * 100000);
 
-  function attemptCall(){
+  let finished = false;
 
-    attempt++;
+  const script =
+    document.createElement("script");
 
-    const callbackName =
-      "promoCallback_" +
-      Date.now() +
-      "_" +
-      Math.floor(Math.random() * 1000000);
+  const timeout =
+    setTimeout(function(){
 
-    let finished = false;
-    let timeout = null;
+      if(finished) return;
 
-    const script =
-      document.createElement("script");
+      finished = true;
 
-    function cleanup(){
+      cleanup();
 
-      if(timeout){
-        clearTimeout(timeout);
-      }
+      callback({
+        error:true
+      });
 
-      try{
-        delete window[callbackName];
-      }catch(e){}
+    },12000);
 
-      if(script.parentNode){
-        script.parentNode.removeChild(script);
-      }
 
+  function cleanup(){
+
+    clearTimeout(timeout);
+
+    try{
+      delete window[callbackName];
+    }catch(e){}
+
+    if(script.parentNode){
+      script.parentNode.removeChild(script);
     }
 
-    function finish(data){
+  }
+
+
+  window[callbackName] =
+    function(data){
 
       if(finished) return;
 
@@ -529,102 +530,45 @@ function callAPI(params, callback, retries = 3){
 
       callback(data);
 
-    }
-
-    window[callbackName] = function(data){
-      finish(data);
     };
 
-    const query =
-      new URLSearchParams(params);
 
-    query.set(
-      "callback",
-      callbackName
-    );
+  const query =
+    new URLSearchParams(params);
 
-    /* Prevent browser/proxy caching */
+  query.set(
+    "callback",
+    callbackName
+  );
 
-    query.set(
-      "_",
-      Date.now().toString() +
-      Math.floor(Math.random() * 10000)
-    );
 
-    script.src =
-      API_URL +
-      "?" +
-      query.toString();
+  script.src =
+    API_URL +
+    "?" +
+    query.toString();
 
-    script.async = true;
+  script.async = true;
 
-    script.onerror = function(){
 
-      if(attempt < retries){
+  script.onerror =
+    function(){
 
-        cleanup();
+      if(finished) return;
 
-        setTimeout(
-          attemptCall,
-          1000 * attempt
-        );
+      finished = true;
 
-      }else{
+      cleanup();
 
-        finish({
-          error:true
-        });
-
-      }
+      callback({
+        error:true
+      });
 
     };
 
-    document.body.appendChild(script);
 
-    timeout =
-      setTimeout(function(){
-
-        if(finished) return;
-
-        if(attempt < retries){
-
-          cleanup();
-
-          setTimeout(
-            attemptCall,
-            1000 * attempt
-          );
-
-        }else{
-
-          finish({
-            error:true
-          });
-
-        }
-
-      },10000);
-
-  }
-
-  attemptCall();
+  document.body.appendChild(script);
 
 }
-
-
-/* =========================
-   SILENT CONNECTION WARM-UP
-========================= */
-
-callAPI(
-  {
-    action:"ping"
-  },
-  function(){
-    /* Silent warm-up only */
-  },
-  3
-);
 
 
 /* =========================
@@ -666,9 +610,6 @@ unlock.addEventListener(
     pendingChoice = null;
     pendingRequestId = null;
 
-    buttons.forEach(function(b){
-      b.disabled = false;
-    });
 
     callAPI(
       {
@@ -684,20 +625,23 @@ unlock.addEventListener(
           status.textContent =
             "Unlocked! Choose A, B, or C.";
 
-        }else if(data && data.error){
+        }
+
+        else if(data && data.error){
 
           status.textContent =
             "Connection error. Please try again.";
 
-        }else{
+        }
+
+        else{
 
           status.textContent =
             "Invalid or already used promo access code.";
 
         }
 
-      },
-      3
+      }
     );
 
   }
@@ -728,16 +672,13 @@ buttons.forEach(
           button.dataset.choice;
 
 
-        /* Prevent changing choice
-           during a connection retry */
-
         if(
           pendingChoice &&
           pendingChoice !== choice
         ){
 
           status.textContent =
-            "Please retry your original choice.";
+            "Please use your original choice.";
 
           return;
 
@@ -747,11 +688,10 @@ buttons.forEach(
         if(!pendingChoice){
 
           pendingChoice = choice;
-
-          pendingRequestId =
-            createRequestId();
+          pendingRequestId = createRequestId();
 
         }
+
 
         playSound("choice");
 
@@ -767,6 +707,7 @@ buttons.forEach(
           "pressed"
         );
 
+
         buttons.forEach(
           function(b){
 
@@ -776,8 +717,10 @@ buttons.forEach(
           }
         );
 
+
         unlock.disabled = true;
         input.disabled = true;
+
 
         status.textContent =
           "Processing your reward...";
@@ -817,6 +760,7 @@ buttons.forEach(
 
               }
 
+
               result.textContent =
                 "🎉 REWARD CONFIRMED! " +
                 reward;
@@ -824,8 +768,10 @@ buttons.forEach(
               result.style.display =
                 "block";
 
+
               status.textContent =
                 "Your choice has been locked. Please message us to place your order.";
+
 
               activeCode = null;
               pendingChoice = null;
@@ -833,15 +779,20 @@ buttons.forEach(
 
             }
 
+
             else if(data && data.error){
 
               /*
-               * The SAME request ID remains active.
-               * Customer can press the SAME choice again.
+               * IMPORTANT:
+               * The code is NOT assumed to be consumed
+               * by the browser.
+               *
+               * The customer may press the SAME
+               * choice again.
                */
 
               status.textContent =
-                "Connection issue. Please press the SAME choice again.";
+                "Connection error. Your code is still safe. Please press the SAME choice again.";
 
               buttons.forEach(
                 function(b){
@@ -852,10 +803,8 @@ buttons.forEach(
                 }
               );
 
-              unlock.disabled = true;
-              input.disabled = true;
-
             }
+
 
             else{
 
@@ -870,8 +819,7 @@ buttons.forEach(
 
             }
 
-          },
-          3
+          }
         );
 
       }
@@ -882,7 +830,7 @@ buttons.forEach(
 
 
 /* =========================
-   CODE INPUT
+   INPUT
 ========================= */
 
 input.addEventListener(
